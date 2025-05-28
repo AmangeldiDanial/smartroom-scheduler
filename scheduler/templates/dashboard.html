@@ -1,6 +1,14 @@
 <h1>Hello, {{ request.user.username }}!</h1>
 <p>Welcome to your dashboard.</p>
-<h2>Your Role: {{ request.user.user.role }}</h2>
+
+{% if request.user.user.role == 'Administrator' %}
+  <p>You are an admin. Go to the <a href="/admin/">admin panel</a>.</p>
+{% elif request.user.user.role == 'Faculty' %}
+  <p>Welcome, faculty member! You can book rooms.</p>
+{% elif request.user.user.role == 'Staff' %}
+  <p>Staff view coming soon.</p>
+{% endif %}
+
 <form method="post" action="{% url 'logout' %}">
   {% csrf_token %}
   <button type="submit">Logout</button>

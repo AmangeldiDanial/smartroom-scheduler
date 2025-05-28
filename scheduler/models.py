@@ -1,5 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import User as AuthUser
+from django.core.exceptions import ValidationError
+from django.core.validators import MinValueValidator
 
 
 class User(models.Model):
@@ -21,7 +23,7 @@ class User(models.Model):
 class Room(models.Model):
     room_id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=100)
-    capacity = models.IntegerField()
+    capacity = models.PositiveIntegerField(validators=[MinValueValidator(1)])  # ✅ No negatives or zero
     location = models.CharField(max_length=100, blank=True, null=True)
     type = models.CharField(max_length=50)
     features = models.TextField(blank=True, null=True)
@@ -43,6 +45,10 @@ class Timeslot(models.Model):
     class Meta:
         managed = False
         db_table = 'timeslots'
+
+    def clean(self):
+        if self.start_time >= self.end_time:
+            raise ValidationError("Start time must be before end time.")
 
     def __str__(self):
         return f"{self.day} {self.start_time}–{self.end_time}"
