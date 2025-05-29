@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>My Bookings</title>
+</head>
+<body>
+  <h1>Your Room Bookings</h1>
+
+  {% if bookings %}
+
+  <form method="get" style="margin-bottom: 20px;">
+    Room:
+    <select name="room">
+        <option value="">All</option>
+        {% for room in rooms %}
+        <option value="{{ room.room_id }}" {% if selected_room == room.room_id|stringformat:"s" %}selected{% endif %}>
+            {{ room.name }}
+        </option>
+        {% endfor %}
+    </select>
+
+    Day:
+    <select name="day">
+        <option value="">All</option>
+        {% for d in days %}
+        <option value="{{ d }}" {% if selected_day == d %}selected{% endif %}>{{ d }}</option>
+        {% endfor %}
+    </select>
+
+    Sort by date:
+    <select name="sort">
+        <option value="desc" {% if sort == "desc" %}selected{% endif %}>Newest First</option>
+        <option value="asc" {% if sort == "asc" %}selected{% endif %}>Oldest First</option>
+    </select>
+
+    <button type="submit">Filter</button>
+
+    <a href="{% url 'export-bookings' %}?room={{ selected_room }}&day={{ selected_day }}&sort={{ sort }}">
+    <button type="button">📥 Export to CSV</button>
+    </a>
+
+    </form>
+
+    <table border="1" cellpadding="8">
+      <tr>
+        <th>Room</th>
+        <th>Date</th>
+        <th>Day</th>
+        <th>Time</th>
+      </tr>
+      {% for booking in bookings %}
+        <tr>
+          <td>{{ booking.room.name }}</td>
+          <td>{{ booking.booking_date }}</td>
+          <td>{{ booking.timeslot.day }}</td>
+          <td>{{ booking.timeslot.start_time }} – {{ booking.timeslot.end_time }}</td>
+            <td>
+            <a href="{% url 'cancel-booking' booking.booking_id %}">Cancel</a>
+            </td>
+        </tr>
+      {% endfor %}
+    </table>
+
+    {% else %}
+    {% if selected_room or selected_day %}
+        <p>No bookings match your filters.</p>
+        <p><a href="{% url 'my-bookings' %}">Clear filters</a></p>
+    {% else %}
+        <p>You have no bookings yet.</p>
+        <p><a href="{% url 'dashboard' %}">← Back to Dashboard</a></p>
+    {% endif %}
+    {% endif %}
+
+  <p><a href="{% url 'dashboard' %}">← Back to Dashboard</a></p>
+  <p><a href="{% url 'calendar' %}">📅 View Booking Calendar</a></p>
+</body>
+</html>

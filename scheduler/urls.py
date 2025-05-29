@@ -1,8 +1,12 @@
 from django.urls import path
-from .views import dashboard_view
-from .views import book_room_view
+from .views import dashboard_view, book_room_view, my_bookings_view, cancel_booking_view, export_bookings_csv, bookings_json_view, calendar_view
 
 urlpatterns = [
-    path('dashboard/', dashboard_view, name='dashboard'),  # Home page
+    path('dashboard/', dashboard_view, name='dashboard'),
     path('book/', book_room_view, name='book-room'),
+    path('my-bookings/', my_bookings_view, name='my-bookings'),
+    path('my-bookings/<int:booking_id>/cancel/', cancel_booking_view, name='cancel-booking'),
+    path('my-bookings/export/', export_bookings_csv, name='export-bookings'),
+    path('api/bookings/', bookings_json_view, name='bookings-json'),
+    path('calendar/', calendar_view, name='calendar'),
 ]

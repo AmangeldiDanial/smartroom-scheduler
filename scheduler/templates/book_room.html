@@ -2,26 +2,31 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Book a Room</title>
+<h1>Book a Room</h1>
 
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'scheduler/css/base.css' %}">
-</head>
-<body>
-  <h1>Book a Room</h1>
+{% if messages %}
+  {% for message in messages %}
+    <p class="{{ message.tags }}">{{ message }}</p>
+  {% endfor %}
+{% endif %}
 
-    {% if messages %}
-        {% for message in messages %}
-            <p class="{{ message.tags }}">{{ message }}</p>
-        {% endfor %}
-    {% endif %}
+<form method="get">
+  <label for="booking_date">Choose a date first:</label>
+  <input type="date" name="date" id="booking_date" value="{{ selected_date|default:'' }}">
+  <button type="submit">Select Date</button>
+</form>
+
+{% if selected_date %}
+  <h2>Booking for date: {{ selected_date }}</h2>
 
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Book</button>
   </form>
+{% endif %}
 
-  <p><a href="{% url 'dashboard' %}">← Back to Dashboard</a></p>
+<p><a href="{% url 'dashboard' %}">← Back to Dashboard</a></p>
+
 </body>
 </html>

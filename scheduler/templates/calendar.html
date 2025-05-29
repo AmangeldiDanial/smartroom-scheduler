@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Booking Calendar</title>
+
+  <!-- FullCalendar CSS & JS from CDN -->
+  <link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
+
+  <style>
+    #calendar {
+      max-width: 900px;
+      margin: 40px auto;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align: center;">📅 Room Booking Calendar</h1>
+
+  <div id="calendar"></div>
+
+  <p style="text-align: center;"><a href="{% url 'dashboard' %}">← Back to Dashboard</a></p>
+
+    <div id="bookingModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Your Booking</h2>
+        <p><strong>Room:</strong> <span id="modalRoom"></span></p>
+        <p><strong>Date:</strong> <span id="modalDate"></span> (<span id="modalDay"></span>)</p>
+        <p><strong>Time:</strong> <span id="modalTime"></span></p>
+        <a id="cancelLink" href="#"><button style="margin-top: 10px;">Cancel Booking</button></a>
+    </div>
+    </div>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const calendarEl = document.getElementById('calendar');
+    const modal = document.getElementById('bookingModal');
+    const closeBtn = document.querySelector('.close');
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+      initialView: 'dayGridMonth',
+      headerToolbar: {
+        left: 'prev,next today',
+        center: 'title',
+        right: 'dayGridMonth,timeGridWeek,listWeek'
+      },
+      events: '/api/bookings/',
+      eventClick: function(info) {
+        const props = info.event.extendedProps;
+
+        if (props.is_yours) {
+          // Fill modal
+          document.getElementById('modalRoom').textContent = props.room;
+          document.getElementById('modalDate').textContent = props.date;
+          document.getElementById('modalDay').textContent = props.day;
+          document.getElementById('modalTime').textContent = `${props.start_time} – ${props.end_time}`;
+
+          // Set cancel link
+          document.getElementById('cancelLink').href = `/my-bookings/${info.event.id}/cancel/`;
+
+          // Show modal
+          modal.style.display = 'block';
+        }
+
+        info.jsEvent.preventDefault();
+      }
+    });
+
+    calendar.render();
+
+    // Close modal when X is clicked
+    closeBtn.onclick = function () {
+      modal.style.display = 'none';
+    };
+
+    // Close modal when clicking outside of it
+    window.onclick = function (event) {
+      if (event.target == modal) {
+        modal.style.display = 'none';
+      }
+    };
+  });
+</script>
+
+
+</body>
+</html>

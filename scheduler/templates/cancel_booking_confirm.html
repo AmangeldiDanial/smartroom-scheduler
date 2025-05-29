@@ -1,0 +1,15 @@
+<h2>Cancel Booking</h2>
+
+<p>Are you sure you want to cancel the following booking?</p>
+
+<ul>
+  <li>Room: {{ booking.room.name }}</li>
+  <li>Date: {{ booking.booking_date }}</li>
+  <li>Time: {{ booking.timeslot.day }} {{ booking.timeslot.start_time }}–{{ booking.timeslot.end_time }}</li>
+</ul>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit">Yes, cancel it</button>
+  <a href="{% url 'my-bookings' %}">No, go back</a>
+</form>

@@ -9,6 +9,12 @@
   <p>Staff view coming soon.</p>
 {% endif %}
 
+<p><a href="{% url 'book-room' %}"> Book a room</a></p>
+
+<p><a href="{% url 'my-bookings' %}">📄 View My Bookings</a></p>
+
+<p><a href="{% url 'calendar' %}">📅 View Booking Calendar</a></p>
+
 <form method="post" action="{% url 'logout' %}">
   {% csrf_token %}
   <button type="submit">Logout</button>
