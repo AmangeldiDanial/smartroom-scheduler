@@ -7,6 +7,10 @@ from django.contrib import messages
 import csv
 from django.http import HttpResponse, JsonResponse
 import datetime
+from django.db.models import Count
+from django.db.models.functions import ExtractWeekDay
+import calendar
+import json
 
 @login_required
 def dashboard_view(request):
@@ -165,3 +169,76 @@ def bookings_json_view(request):
 @login_required
 def calendar_view(request):
     return render(request, 'calendar.html')
+
+@login_required
+def reports_dashboard(request):
+    room_stats = (
+        RoomBooking.objects.values('room__name')
+        .annotate(bookings=Count('room'))
+        .order_by('-bookings')
+    )
+
+    room_labels = [entry['room__name'] for entry in room_stats]
+    room_counts = [entry['bookings'] for entry in room_stats]
+
+    # 📅 Weekday usage stats
+    weekday_stats = (
+        RoomBooking.objects
+        .annotate(weekday=ExtractWeekDay('booking_date'))  # 1=Sunday, 7=Saturday
+        .values('weekday')
+        .annotate(total=Count('booking_id'))
+        .order_by('weekday')
+    )
+
+    # Convert numeric weekdays to names
+    weekday_labels = [calendar.day_name[(entry['weekday'] - 1) % 7] for entry in weekday_stats]
+    weekday_counts = [entry['total'] for entry in weekday_stats]
+
+    return render(request, 'reports_dashboard.html', {
+        'room_labels': room_labels,
+        'room_counts': room_counts,
+        'weekday_labels': weekday_labels,
+        'weekday_counts': weekday_counts,
+    })
+
+@login_required
+def export_report_csv(request):
+    # Query room usage
+    room_stats = (
+        RoomBooking.objects.values('room__name')
+        .annotate(bookings=Count('room'))
+        .order_by('-bookings')
+    )
+
+    # Query weekday usage
+    weekday_stats = (
+        RoomBooking.objects
+        .annotate(weekday=ExtractWeekDay('booking_date'))
+        .values('weekday')
+        .annotate(total=Count('booking_id'))
+        .order_by('weekday')
+    )
+
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="booking_report.csv"'
+
+    writer = csv.writer(response)
+
+    # Room Usage Section
+    writer.writerow(['Room Usage Report'])
+    writer.writerow(['Room Name', 'Booking Count'])
+    for entry in room_stats:
+        writer.writerow([entry['room__name'], entry['bookings']])
+    writer.writerow([])  # Blank line
+
+    # Weekday Usage Section
+    writer.writerow(['Bookings by Day of Week'])
+    writer.writerow(['Day', 'Booking Count'])
+    import calendar
+    for entry in weekday_stats:
+        day_name = calendar.day_name[(entry['weekday'] - 1) % 7]
+        writer.writerow([day_name, entry['total']])
+
+    return response
+

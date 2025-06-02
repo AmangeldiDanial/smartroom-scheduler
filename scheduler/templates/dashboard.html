@@ -15,6 +15,8 @@
 
 <p><a href="{% url 'calendar' %}">📅 View Booking Calendar</a></p>
 
+<p><a href="{% url 'reports-dashboard' %}">Report Dashboard</a></p>
+
 <form method="post" action="{% url 'logout' %}">
   {% csrf_token %}
   <button type="submit">Logout</button>

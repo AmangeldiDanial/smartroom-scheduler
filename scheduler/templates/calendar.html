@@ -47,6 +47,10 @@
         right: 'dayGridMonth,timeGridWeek,listWeek'
       },
       events: '/api/bookings/',
+      dateClick: function(info) {
+        const dateStr = info.dateStr;
+        window.location.href = `/book/?date=${dateStr}`;
+      },
       eventClick: function(info) {
         const props = info.event.extendedProps;
 

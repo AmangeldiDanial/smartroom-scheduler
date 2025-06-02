@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Reports Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>📊 Room Usage Report</h1>
+
+  <h2 style="text-align:center;">📆 Bookings by Day of Week</h2>
+
+<div style="max-width: 700px; margin: auto;">
+  <canvas id="weekdayChart" style="max-height: 400px;"></canvas>
+</div>
+
+<div style="max-width: 700px; margin: auto;"></div>
+    <canvas id="roomUsageChart" style="max-height: 400px;"></canvas>
+  </div>
+  
+    {{ room_labels|json_script:"room-labels" }}
+    {{ room_counts|json_script:"room-counts" }}
+    {{ weekday_labels|json_script:"weekday-labels" }}
+    {{ weekday_counts|json_script:"weekday-counts" }}
+
+
+  <script>
+    const weekdayLabels = JSON.parse(document.getElementById('weekday-labels').textContent);
+    const weekdayData = {
+    labels: weekdayLabels,
+    datasets: [{
+        label: 'Bookings by Day',
+        data: JSON.parse(document.getElementById('weekday-counts').textContent),
+        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+    }]
+    };
+
+    new Chart(document.getElementById('weekdayChart'), {
+    type: 'bar',
+    data: weekdayData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+        legend: { display: false }
+        }
+    }
+    });
+
+    const labels = JSON.parse(document.getElementById('room-labels').textContent);
+    const data = {
+    labels: labels,
+    datasets: [{
+        label: 'Number of Bookings',
+        data: JSON.parse(document.getElementById('room-counts').textContent),
+        backgroundColor: [
+        'rgba(75, 192, 192, 0.6)',
+        'rgba(255, 99, 132, 0.6)',
+        'rgba(255, 205, 86, 0.6)',
+        'rgba(153, 102, 255, 0.6)',
+        'rgba(201, 203, 207, 0.6)'
+        ]
+    }]
+    };
+
+    new Chart(document.getElementById('roomUsageChart'), {
+      type: 'bar',
+      data: data
+    });
+  </script>
+
+    <p style="text-align: center;">
+    <a href="{% url 'export-reports' %}">
+        <button>📥 Export Report to CSV</button>
+    </a>
+    </p>
+
+
+  <p><a href="{% url 'dashboard' %}">← Back to Dashboard</a></p>
+</body>
+</html>
