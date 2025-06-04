@@ -1,24 +1,74 @@
-<h1>Hello, {{ request.user.username }}!</h1>
-<p>Welcome to your dashboard.</p>
+{% extends 'base.html' %}
 
-{% if request.user.user.role == 'Administrator' %}
-  <p>You are an admin. Go to the <a href="/admin/">admin panel</a>.</p>
-{% elif request.user.user.role == 'Faculty' %}
-  <p>Welcome, faculty member! You can book rooms.</p>
+{% block title %}Dashboard{% endblock %}
+
+{% block content %}
+<div class="card shadow p-4 mb-4">
+  <h2 class="mb-3">👋 Hello, {{ request.user.user.first_name }}!</h2>
+  <p class="text-muted">Welcome to your dashboard.</p>
+
+  {% if request.user.user.role == 'Administrator' %}
+    <div class="alert alert-primary">You are an <strong>Administrator</strong>. Access the <a href="/admin/">Admin Panel</a>.</div>
+  {% elif request.user.user.role == 'Faculty' %}
+    <div class="alert alert-info">Welcome, <strong>Faculty</strong>! You can book and manage events.</div>
+  {% elif request.user.user.role == 'Staff' %}
+    <div class="alert alert-secondary">You are logged in as <strong>Staff</strong>.</div>
+  {% endif %}
+</div>
+
+{% if request.user.user.role == 'Administrator' or request.user.user.role == 'Faculty' %}
+  <!-- Full tools for Admin/Faculty -->
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4">
+      <a href="{% url 'book-room' %}" class="btn btn-success w-100">➕ Book a Room</a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a href="{% url 'my-bookings' %}" class="btn btn-outline-dark w-100">📄 My Bookings</a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a href="{% url 'calendar' %}" class="btn btn-outline-primary w-100">📅 Booking Calendar</a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a href="{% url 'reports-dashboard' %}" class="btn btn-outline-info w-100">📊 Report Dashboard</a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger w-100">🚪 Logout</button>
+      </form>
+    </div>
+  </div>
+
 {% elif request.user.user.role == 'Staff' %}
-  <p>Staff view coming soon.</p>
+  <!-- Staff access -->
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4">
+      <a href="{% url 'calendar' %}" class="btn btn-outline-primary w-100">📅 Booking Calendar</a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <a href="{% url 'reports-dashboard' %}" class="btn btn-outline-info w-100">📊 Report Dashboard</a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger w-100">🚪 Logout</button>
+      </form>
+    </div>
+  </div>
+
+{% else %}
+  <!-- Students -->
+  <div class="row g-3">
+    <div class="col-md-6 col-lg-4">
+      <a href="{% url 'calendar' %}" class="btn btn-outline-primary w-100">📅 Booking Calendar</a>
+    </div>
+    <div class="col-md-6 col-lg-4">
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-outline-danger w-100">🚪 Logout</button>
+      </form>
+    </div>
+  </div>
 {% endif %}
 
-<p><a href="{% url 'book-room' %}"> Book a room</a></p>
-
-<p><a href="{% url 'my-bookings' %}">📄 View My Bookings</a></p>
-
-<p><a href="{% url 'calendar' %}">📅 View Booking Calendar</a></p>
-
-<p><a href="{% url 'reports-dashboard' %}">Report Dashboard</a></p>
-
-<form method="post" action="{% url 'logout' %}">
-  {% csrf_token %}
-  <button type="submit">Logout</button>
-</form>
-
+{% endblock %}

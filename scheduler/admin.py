@@ -11,7 +11,7 @@ class UserAdmin(admin.ModelAdmin):
 
 @admin.register(Room)
 class RoomAdmin(admin.ModelAdmin):
-    list_display = ('room_id', 'name', 'capacity', 'location', 'type')
+    list_display = ('room_id', 'name', 'capacity', 'location', 'type', 'features')
     search_fields = ('name', 'location')
     list_filter = ('type',)
 

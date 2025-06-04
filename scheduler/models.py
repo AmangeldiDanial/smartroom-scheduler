@@ -11,6 +11,8 @@ class User(models.Model):
     password = models.CharField(max_length=100)
     email = models.EmailField(max_length=100, unique=True)
     role = models.CharField(max_length=20)
+    first_name = models.CharField(max_length=255, blank=True, null=True)
+    last_name = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         managed = False
@@ -58,7 +60,7 @@ class Event(models.Model):
     event_id = models.AutoField(primary_key=True)
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
-    organizer = models.ForeignKey(User, on_delete=models.DO_NOTHING)
+    organizer = models.ForeignKey(User, on_delete=models.DO_NOTHING, db_column='organizer')
     start_date = models.DateField(blank=True, null=True)
     end_date = models.DateField(blank=True, null=True)
 

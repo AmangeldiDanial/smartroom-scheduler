@@ -35,14 +35,22 @@ def book_room_view(request):
         new_booking.user = request.user.user
         new_booking.booking_date = selected_date
 
-        conflict = RoomBooking.objects.filter(
+        room_conflict = RoomBooking.objects.filter(
             room=new_booking.room,
             timeslot=new_booking.timeslot,
             booking_date=new_booking.booking_date
         ).exists()
 
-        if conflict:
+        user_conflict = RoomBooking.objects.filter(
+            user=new_booking.user,
+            timeslot=new_booking.timeslot,
+            booking_date=new_booking.booking_date
+        ).exists()
+
+        if room_conflict:
             messages.error(request, "This room is already booked for the selected time.")
+        elif user_conflict:
+            messages.error(request, "❌ You already have a booking at that time.")
         else:
             new_booking.save()
             messages.success(request, "Room successfully booked!")
