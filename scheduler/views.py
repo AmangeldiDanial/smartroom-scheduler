@@ -7,7 +7,7 @@ from django.contrib import messages
 import csv
 from django.http import HttpResponse, JsonResponse
 import datetime
-from django.db.models import Count
+from django.db.models import Count, F
 from django.db.models.functions import ExtractWeekDay
 import calendar
 import json
@@ -59,6 +59,7 @@ def book_room_view(request):
     return render(request, 'book_room.html', {'form': form, 'selected_date': selected_date})
 
 @login_required
+@role_required(['Faculty', 'Admin'])
 def my_bookings_view(request):
     custom_user = request.user.user
     bookings = RoomBooking.objects.filter(user=custom_user).select_related('room', 'timeslot')
@@ -93,6 +94,7 @@ def my_bookings_view(request):
 
 
 @login_required
+@role_required(['Faculty', 'Admin'])
 def cancel_booking_view(request, booking_id):
     custom_user = request.user.user
     booking = get_object_or_404(RoomBooking, pk=booking_id, user=custom_user)
@@ -105,6 +107,7 @@ def cancel_booking_view(request, booking_id):
     return render(request, 'cancel_booking_confirm.html', {'booking': booking})
 
 @login_required
+@role_required(['Faculty', 'Admin', 'Staff'])
 def export_bookings_csv(request):
     custom_user = request.user.user
     bookings = RoomBooking.objects.filter(user=custom_user).select_related('room', 'timeslot')
@@ -179,6 +182,7 @@ def calendar_view(request):
     return render(request, 'calendar.html')
 
 @login_required
+@role_required(['Faculty', 'Admin', 'Staff'])
 def reports_dashboard(request):
     room_stats = (
         RoomBooking.objects.values('room__name')
@@ -202,14 +206,31 @@ def reports_dashboard(request):
     weekday_labels = [calendar.day_name[(entry['weekday'] - 1) % 7] for entry in weekday_stats]
     weekday_counts = [entry['total'] for entry in weekday_stats]
 
+    # --- Timeslot usage ---
+    slot_stats = (
+        RoomBooking.objects
+        .annotate(weekday=ExtractWeekDay('booking_date'))
+        .values('timeslot__day', 'timeslot__start_time', 'timeslot__end_time', 'weekday')
+        .annotate(bookings=Count('booking_id'))
+        .order_by('weekday', 'timeslot__start_time')
+    )
+    slot_labels = [
+        f"{calendar.day_name[(entry['weekday'] - 1) % 7]} {entry['timeslot__start_time'].strftime('%H:%M')}–{entry['timeslot__end_time'].strftime('%H:%M')}"
+        for entry in slot_stats
+    ]
+    slot_counts = [entry['bookings'] for entry in slot_stats]
+
     return render(request, 'reports_dashboard.html', {
         'room_labels': room_labels,
         'room_counts': room_counts,
         'weekday_labels': weekday_labels,
         'weekday_counts': weekday_counts,
+        'slot_labels': slot_labels,
+        'slot_counts': slot_counts,
     })
 
 @login_required
+@role_required(['Faculty', 'Admin', 'Staff'])
 def export_report_csv(request):
     # Query room usage
     room_stats = (
@@ -250,3 +271,30 @@ def export_report_csv(request):
 
     return response
 
+@login_required
+@role_required(['Faculty', 'Admin', 'Staff'])
+def timeslot_report_view(request):
+    # Group bookings by timeslot and weekday (1=Sunday, 7=Saturday)
+    stats = (
+        RoomBooking.objects
+        .annotate(weekday=ExtractWeekDay('booking_date'))
+        .values('timeslot__day', 'timeslot__start_time', 'timeslot__end_time', 'weekday')
+        .annotate(bookings=Count('booking_id'))
+        .order_by('weekday', 'timeslot__start_time')
+    )
+
+    # Format data for chart: { "Monday 09:00–10:00": count, ... }
+    slot_labels = []
+    slot_counts = []
+
+    for entry in stats:
+        day_name = calendar.day_name[(entry['weekday'] - 1) % 7]
+        time_range = f"{entry['timeslot__start_time'].strftime('%H:%M')}–{entry['timeslot__end_time'].strftime('%H:%M')}"
+        label = f"{day_name} {time_range}"
+        slot_labels.append(label)
+        slot_counts.append(entry['bookings'])
+
+    return render(request, 'timeslot_report.html', {
+        'slot_labels': slot_labels,
+        'slot_counts': slot_counts,
+    })

@@ -12,13 +12,7 @@
 <div style="max-width: 700px; margin: auto;">
   <canvas id="weekdayChart" style="max-height: 400px;"></canvas>
 </div>
-
-<div style="max-width: 700px; margin: auto;"></div>
-    <canvas id="roomUsageChart" style="max-height: 400px;"></canvas>
-  </div>
   
-    {{ room_labels|json_script:"room-labels" }}
-    {{ room_counts|json_script:"room-counts" }}
     {{ weekday_labels|json_script:"weekday-labels" }}
     {{ weekday_counts|json_script:"weekday-counts" }}
 
@@ -45,7 +39,17 @@
         }
     }
     });
+</script>
+<h2 style="text-align:center;">📆 Bookings by Room</h2>
 
+<div style="max-width: 700px; margin: auto;"></div>
+    <canvas id="roomUsageChart" style="max-height: 400px;"></canvas>
+  </div>
+
+      {{ room_labels|json_script:"room-labels" }}
+    {{ room_counts|json_script:"room-counts" }}
+
+<script>
     const labels = JSON.parse(document.getElementById('room-labels').textContent);
     const data = {
     labels: labels,
@@ -67,6 +71,46 @@
       data: data
     });
   </script>
+
+<h2 style="text-align:center;">📆 Bookings by Timeslots</h2>
+
+<div style="max-width: 700px; margin: auto;"></div>
+    <canvas id="timeslotChart" style="max-height: 400px;"></canvas>
+  </div>
+
+    {{ slot_labels|json_script:"slot-labels" }}
+    {{ slot_counts|json_script:"slot-counts" }}
+
+<script>
+  const slotLabels = JSON.parse(document.getElementById('slot-labels').textContent);
+  const slotCounts = JSON.parse(document.getElementById('slot-counts').textContent);
+  const maxSlot = Math.max(...slotCounts);
+
+  new Chart(document.getElementById('timeslotChart'), {
+    type: 'bar',
+    data: {
+      labels: slotLabels,
+      datasets: [{
+        label: 'Bookings per Timeslot',
+        data: slotCounts,
+        backgroundColor: slotCounts.map(count =>
+          count === maxSlot ? 'rgba(255, 99, 132, 0.8)' : 'rgba(54, 162, 235, 0.6)')
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 0 } },
+        y: { beginAtZero: true }
+      }
+    }
+  });
+</script>
+
 
     <p style="text-align: center;">
     <a href="{% url 'export-reports' %}">
