@@ -61,9 +61,7 @@ class Event(models.Model):
     title = models.CharField(max_length=100)
     description = models.TextField(blank=True, null=True)
     organizer = models.ForeignKey(User, on_delete=models.DO_NOTHING, db_column='organizer')
-    start_date = models.DateField(blank=True, null=True)
-    end_date = models.DateField(blank=True, null=True)
-
+    
     class Meta:
         managed = False
         db_table = 'events'
@@ -76,6 +74,7 @@ class RoomBooking(models.Model):
     booking_id = models.AutoField(primary_key=True)
     user = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     room = models.ForeignKey(Room, on_delete=models.DO_NOTHING)
+    event = models.ForeignKey(Event, on_delete=models.CASCADE, related_name='bookings', null=True)
     timeslot = models.ForeignKey(Timeslot, on_delete=models.DO_NOTHING)
     booking_date = models.DateField()
 

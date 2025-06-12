@@ -1,8 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .utils import role_required
-from scheduler.forms import BookingForm
-from scheduler.models import RoomBooking, Room, Timeslot
+from scheduler.forms import BookingForm, EventForm
+from scheduler.models import RoomBooking, Room, Timeslot, Event
 from django.contrib import messages
 import csv
 from django.http import HttpResponse, JsonResponse
@@ -28,7 +28,11 @@ def book_room_view(request):
         except ValueError:
             selected_date = None
 
-    form = BookingForm(request.POST or None, date=selected_date)
+    if not Event.objects.filter(organizer=request.user.user).exists():
+        messages.error(request, "You must create an event before booking a room.")
+        return redirect('dashboard')  # or redirect to event creation
+
+    form = BookingForm(request.POST or None, date=selected_date, user=request.user.user)
 
     if request.method == 'POST' and form.is_valid():
         new_booking = form.save(commit=False)
@@ -298,3 +302,17 @@ def timeslot_report_view(request):
         'slot_labels': slot_labels,
         'slot_counts': slot_counts,
     })
+
+@login_required
+@role_required(['Faculty', 'Admin'])
+def create_event_view(request):
+    form = EventForm(request.POST or None)
+
+    if request.method == 'POST' and form.is_valid():
+        event = form.save(commit=False)
+        event.organizer = request.user.user  # Link to custom User table
+        event.save()
+        messages.success(request, "✅ Event created successfully.")
+        return redirect('dashboard')
+
+    return render(request, 'create_event.html', {'form': form})

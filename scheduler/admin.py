@@ -24,9 +24,8 @@ class TimeslotAdmin(admin.ModelAdmin):
 
 @admin.register(Event)
 class EventAdmin(admin.ModelAdmin):
-    list_display = ('event_id', 'title', 'organizer', 'start_date', 'end_date')
+    list_display = ('event_id', 'title', 'organizer')
     search_fields = ('title',)
-    list_filter = ('start_date',)
 
 
 @admin.register(RoomBooking)
