@@ -113,17 +113,19 @@ def cancel_booking_view(request, booking_id):
 @role_required(['Faculty', 'Administrator', 'Staff'])
 def export_bookings_csv(request):
     custom_user = request.user.user
-    bookings = RoomBooking.objects.filter(user=custom_user).select_related('room', 'timeslot')
+    bookings = RoomBooking.objects.filter(user=custom_user).select_related('room', 'timeslot', 'event')
 
     # Apply same filters
     room_id = request.GET.get('room')
     day = request.GET.get('day')
     sort = request.GET.get('sort', 'desc')
 
-    if room_id:
-        bookings = bookings.filter(room_id=room_id)
-    if day:
+    if room_id and room_id.isdigit():
+        bookings = bookings.filter(room_id=int(room_id))
+
+    if day and day.lower() != 'none':
         bookings = bookings.filter(timeslot__day=day)
+
     if sort == 'asc':
         bookings = bookings.order_by('booking_date')
     else:
@@ -134,10 +136,11 @@ def export_bookings_csv(request):
     response['Content-Disposition'] = 'attachment; filename="my_bookings.csv"'
 
     writer = csv.writer(response)
-    writer.writerow(['Room', 'Date', 'Day', 'Start Time', 'End Time'])
+    writer.writerow(['Event Title', 'Room', 'Date', 'Day', 'Start Time', 'End Time'])
 
     for b in bookings:
         writer.writerow([
+            b.event.title,
             b.room.name,
             b.booking_date,
             b.timeslot.day,
@@ -213,16 +216,17 @@ def reports_dashboard(request):
     # --- Timeslot usage ---
     slot_stats = (
         RoomBooking.objects
-        .annotate(weekday=ExtractWeekDay('booking_date'))
-        .values('timeslot__day', 'timeslot__start_time', 'timeslot__end_time', 'weekday')
+        .values('timeslot_id', 'timeslot__day', 'timeslot__start_time', 'timeslot__end_time')
         .annotate(bookings=Count('booking_id'))
-        .order_by('weekday', 'timeslot__start_time')
+        .order_by('timeslot__day', 'timeslot__start_time')
     )
+
     slot_labels = [
-        f"{calendar.day_name[(entry['weekday'] - 1) % 7]} {entry['timeslot__start_time'].strftime('%H:%M')}–{entry['timeslot__end_time'].strftime('%H:%M')}"
+        f"{entry['timeslot__day']} {entry['timeslot__start_time'].strftime('%H:%M')}–{entry['timeslot__end_time'].strftime('%H:%M')}"
         for entry in slot_stats
     ]
     slot_counts = [entry['bookings'] for entry in slot_stats]
+
 
     return render(request, 'reports_dashboard.html', {
         'room_labels': room_labels,
