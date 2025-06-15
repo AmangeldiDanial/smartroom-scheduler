@@ -43,6 +43,7 @@
 
     <table border="1" cellpadding="8">
       <tr>
+        <th>Event</th>
         <th>Room</th>
         <th>Date</th>
         <th>Day</th>
@@ -50,6 +51,7 @@
       </tr>
       {% for booking in bookings %}
         <tr>
+          <td>{{ booking.event.title }}</td>
           <td>{{ booking.room.name }}</td>
           <td>{{ booking.booking_date }}</td>
           <td>{{ booking.timeslot.day }}</td>

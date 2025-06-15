@@ -19,12 +19,15 @@
 
   <script>
     const weekdayLabels = JSON.parse(document.getElementById('weekday-labels').textContent);
+    const weekdayCounts = JSON.parse(document.getElementById('weekday-counts').textContent);
+    const maxDay = Math.max(...weekdayCounts);
     const weekdayData = {
     labels: weekdayLabels,
     datasets: [{
         label: 'Bookings by Day',
-        data: JSON.parse(document.getElementById('weekday-counts').textContent),
-        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+        data: weekdayCounts,
+        backgroundColor: weekdayCounts.map(count =>
+          count === maxDay ? 'rgba(255, 99, 132, 0.8)' : 'rgba(54, 162, 235, 0.6)')
     }]
     };
 

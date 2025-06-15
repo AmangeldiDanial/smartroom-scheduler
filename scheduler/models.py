@@ -8,11 +8,7 @@ class User(models.Model):
     user_id = models.AutoField(primary_key=True)
     auth_user = models.OneToOneField(AuthUser, on_delete=models.CASCADE, db_column='auth_user_id', null=True)
     username = models.CharField(max_length=50, unique=True)
-    password = models.CharField(max_length=100)
-    email = models.EmailField(max_length=100, unique=True)
     role = models.CharField(max_length=20)
-    first_name = models.CharField(max_length=255, blank=True, null=True)
-    last_name = models.CharField(max_length=255, blank=True, null=True)
 
     class Meta:
         managed = False

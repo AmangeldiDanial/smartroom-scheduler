@@ -10,14 +10,13 @@ import datetime
 from django.db.models import Count, F
 from django.db.models.functions import ExtractWeekDay
 import calendar
-import json
 
 @login_required
 def dashboard_view(request):
     return render(request, 'dashboard.html')
 
 @login_required
-@role_required(['Faculty', 'Admin'])
+@role_required(['Faculty', 'Administrator'])
 def book_room_view(request):
     selected_date_str = request.GET.get('date') or request.POST.get('booking_date')
     selected_date = None
@@ -30,7 +29,7 @@ def book_room_view(request):
 
     if not Event.objects.filter(organizer=request.user.user).exists():
         messages.error(request, "You must create an event before booking a room.")
-        return redirect('dashboard')  # or redirect to event creation
+        return redirect('dashboard')
 
     form = BookingForm(request.POST or None, date=selected_date, user=request.user.user)
 
@@ -63,10 +62,10 @@ def book_room_view(request):
     return render(request, 'book_room.html', {'form': form, 'selected_date': selected_date})
 
 @login_required
-@role_required(['Faculty', 'Admin'])
+@role_required(['Faculty', 'Administrator'])
 def my_bookings_view(request):
     custom_user = request.user.user
-    bookings = RoomBooking.objects.filter(user=custom_user).select_related('room', 'timeslot')
+    bookings = RoomBooking.objects.filter(user=custom_user).select_related('room', 'timeslot', 'event')
 
     # Filtering
     room_id = request.GET.get('room')
@@ -98,7 +97,7 @@ def my_bookings_view(request):
 
 
 @login_required
-@role_required(['Faculty', 'Admin'])
+@role_required(['Faculty', 'Administrator'])
 def cancel_booking_view(request, booking_id):
     custom_user = request.user.user
     booking = get_object_or_404(RoomBooking, pk=booking_id, user=custom_user)
@@ -111,7 +110,7 @@ def cancel_booking_view(request, booking_id):
     return render(request, 'cancel_booking_confirm.html', {'booking': booking})
 
 @login_required
-@role_required(['Faculty', 'Admin', 'Staff'])
+@role_required(['Faculty', 'Administrator', 'Staff'])
 def export_bookings_csv(request):
     custom_user = request.user.user
     bookings = RoomBooking.objects.filter(user=custom_user).select_related('room', 'timeslot')
@@ -152,7 +151,7 @@ def export_bookings_csv(request):
 def bookings_json_view(request):
     user = request.user.user
 
-    bookings = RoomBooking.objects.select_related('room', 'timeslot', 'user')
+    bookings = RoomBooking.objects.select_related('room', 'timeslot', 'user', 'event')
 
     events = []
     for booking in bookings:
@@ -164,7 +163,7 @@ def bookings_json_view(request):
         end = datetime.datetime.combine(booking.booking_date, booking.timeslot.end_time)
 
         events.append({
-            'title': f"{'You' if is_yours else 'Booked'} – {booking.room.name}",
+            'title': booking.event.title,
             'start': start.isoformat(),
             'end': end.isoformat(),
             'color': color,
@@ -176,6 +175,7 @@ def bookings_json_view(request):
                 'day': booking.timeslot.day,
                 'start_time': booking.timeslot.start_time.strftime('%H:%M'),
                 'end_time': booking.timeslot.end_time.strftime('%H:%M'),
+                'label': f"{'You' if is_yours else 'Booked'} – {booking.room.name}"
             }
         })
 
@@ -186,7 +186,7 @@ def calendar_view(request):
     return render(request, 'calendar.html')
 
 @login_required
-@role_required(['Faculty', 'Admin', 'Staff'])
+@role_required(['Faculty', 'Administrator', 'Staff'])
 def reports_dashboard(request):
     room_stats = (
         RoomBooking.objects.values('room__name')
@@ -234,7 +234,7 @@ def reports_dashboard(request):
     })
 
 @login_required
-@role_required(['Faculty', 'Admin', 'Staff'])
+@role_required(['Faculty', 'Administrator', 'Staff'])
 def export_report_csv(request):
     # Query room usage
     room_stats = (
@@ -276,7 +276,7 @@ def export_report_csv(request):
     return response
 
 @login_required
-@role_required(['Faculty', 'Admin', 'Staff'])
+@role_required(['Faculty', 'Administrator', 'Staff'])
 def timeslot_report_view(request):
     # Group bookings by timeslot and weekday (1=Sunday, 7=Saturday)
     stats = (
@@ -304,7 +304,7 @@ def timeslot_report_view(request):
     })
 
 @login_required
-@role_required(['Faculty', 'Admin'])
+@role_required(['Faculty', 'Administrator'])
 def create_event_view(request):
     form = EventForm(request.POST or None)
 

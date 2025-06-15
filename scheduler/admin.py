@@ -4,7 +4,7 @@ from .models import User, Room, Timeslot, Event, RoomBooking
 
 @admin.register(User)
 class UserAdmin(admin.ModelAdmin):
-    list_display = ('user_id', 'username', 'email', 'role')
+    list_display = ('user_id', 'username', 'role')
     search_fields = ('username', 'email')
     list_filter = ('role',)
 
