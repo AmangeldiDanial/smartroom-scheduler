@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from .utils import role_required
+from django.views.decorators.cache import cache_page
 from scheduler.forms import BookingForm, EventForm
 from scheduler.models import RoomBooking, Room, Timeslot, Event
 from django.contrib import messages
@@ -188,6 +189,7 @@ def bookings_json_view(request):
 def calendar_view(request):
     return render(request, 'calendar.html')
 
+@cache_page(60*15)
 @login_required
 @role_required(['Faculty', 'Administrator', 'Staff'])
 def reports_dashboard(request):
